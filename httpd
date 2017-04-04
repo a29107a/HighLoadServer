@@ -1,0 +1,62 @@
+#!/bin/bash
+
+DOCUMENT_PATH="./"
+NCPU=1
+
+while [[ $# -gt 1 ]]
+do
+    key="$1"
+
+    case $key in
+        -r)
+            DOCUMENT_PATH="$2"
+            shift
+            ;;
+        -c)
+            NCPU="$2"
+            shift
+            ;;
+        *)
+            # unknown option
+            ;;
+    esac
+shift
+done
+
+abspath() {
+	local thePath
+	if [[ ! "$1" =~ ^/ ]];then
+		thePath="$PWD/$1"
+	else
+		thePath="$1"
+	fi
+	echo "$thePath"|(
+	IFS=/
+	read -a parr
+	declare -a outp
+	for i in "${parr[@]}";do
+		case "$i" in
+			''|.) continue ;;
+			..)
+				len=${#outp[@]}
+				if ((len==0));then
+					continue
+				else
+					unset outp[$((len-1))] 
+				fi
+				;;
+			*)
+				len=${#outp[@]}
+				outp[$len]="$i"
+				;;
+		esac
+	done
+	echo /"${outp[*]}"
+	)
+}
+
+echo $(abspath $DOCUMENT_PATH)
+
+./_rel/highloadserver/bin/highloadserver console -r "$(abspath $DOCUMENT_PATH)"
+
+#HTTPD_DOCUMENT_PATH="$(abspath $DOCUMENT_PATH)" HTTPD_CPU=$NCPU make run

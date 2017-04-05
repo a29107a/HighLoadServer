@@ -10,7 +10,7 @@ start(_Type, _Args) ->
     % io:fwrite(init:get_argument(r), []),
     % io:fwrite("~n/******/~n", []),
     {ok, _} = ranch:start_listener(tcp_echo, 1,
-    ranch_tcp, [{port, 5555}], http_protocol, get_directory(Param)),
+    ranch_tcp, [{port, 80}], http_protocol, get_directory(Param)),
     highloadserver_sup:start_link().
 
 stop(_State) ->

@@ -39,10 +39,14 @@ protocol(<<_ , _/binary>>, Socket, Transport, _) ->
 
 send_file_header(RawData, Socket, Transport, Dir) ->
     [Doc, _] = binary:split(RawData,<<" ">>),
+    % Check for /../
+    io:fwrite(RawData, []),
+    Check = binary:split(Doc,<<"/">>),
+    io:fwrite(handle_hack(Check), []),
     BinDir = unicode:characters_to_binary(Dir),
-    FileToCheck = <<BinDir/binary, Doc/binary>>,
-    io:fwrite("~n/*****/~n", []),
-    io:fwrite(filename:extension(FileToCheck), []),
+    % DocNoPers = unicode:characters_to_binary(http_uri:decode(binary_to_list(Doc))),
+    [DocNoParam | _] = binary:split(Doc,<<"?">>),
+    FileToCheck = <<BinDir/binary, DocNoParam/binary>>,
     File = handle_directory(filename:extension(FileToCheck), FileToCheck),
     io:fwrite(File, []),
     Transport:send(Socket, header_compile(File)),
@@ -51,7 +55,7 @@ send_file_header(RawData, Socket, Transport, Dir) ->
 header_compile(File) ->
     FileSize = filelib:file_size(File),
     Code = case FileSize of
-        0 -> <<"404 Not found">>;
+        0 -> not_found(File);
         _ -> success_info(File, FileSize)
     end,
     % Start = <<"HTTP/1.1 ">>,
@@ -60,6 +64,14 @@ header_compile(File) ->
     ["HTTP/1.1 ", Code, general_info()].
 header_compile() ->
     ["HTTP/1.1 405 Method not allowed", general_info()].
+
+not_found(File) ->
+    MargToIndex = byte_size(File) - 10,
+    <<_:MargToIndex/binary, F/binary>> = File,
+    case F of
+        <<"index.html">> -> <<"403 Forbidden">>;
+        _ -> <<"404 Not found">>
+    end.
 
 general_info() ->
     ["\r\nServer: Ermakov httpd\r\nDate: ", date_for_header(), "\r\nConnection: close\r\n\r\n"].
@@ -102,3 +114,14 @@ date_for_header() ->
     {Year, MonthNumber, Day} = Date,
     Month = element(MonthNumber, {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}),
     io_lib:format("~s, ~B ~s ~B ~2..0B:~2..0B:~2..0B GMT", [DayOfWeek, Day, Month, Year, Hours, Minutes, Seconds]).
+
+handle_hack([Check | Rest]) ->
+    case Check of
+        <<"..">> -> <<"hack">>;
+        _ -> handle_hack(Rest)
+    end;
+handle_hack(Check) ->
+    case Check of
+        <<"..">> -> <<"hack">>;
+        _ -> <<"OK">>
+    end.

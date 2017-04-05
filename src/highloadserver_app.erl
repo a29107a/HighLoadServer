@@ -17,10 +17,10 @@ stop(_State) ->
     ok.
 
 get_directory({ok, [Dir]}) ->
-    io:fwrite(Dir, []),
+    % io:fwrite(Dir, []),
     Dir;
     % [get_directory(""),"/",Dir];
-    get_directory(_) ->
+get_directory(_) ->
     {ok, Dir} = file:get_cwd(),
-    io:fwrite(Dir, []),
+    % io:fwrite(Dir, []),
     Dir.

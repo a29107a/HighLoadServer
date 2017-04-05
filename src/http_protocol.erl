@@ -10,15 +10,15 @@ start_link(Ref, Socket, Transport, Opts) ->
 
 init(Ref, Socket, Transport, Opts) ->
 	ok = ranch:accept_ack(Ref),
-    io:fwrite(Opts, []),
+    % io:fwrite(Opts, []),
 	loop(Socket, Transport, Opts).
 
 loop(Socket, Transport, Dir) ->
     case Transport:recv(Socket, 0, 5000) of
 		{ok, Data} when Data =/= <<4>> ->
-            io:fwrite("~n***********~n", []),
-			io:fwrite(Data, []),
-			io:fwrite("~n***********~n", []),
+            % io:fwrite("~n***********~n", []),
+			% io:fwrite(Data, []),
+			% io:fwrite("~n***********~n", []),
             protocol(Data, Socket, Transport, Dir),
             ok = Transport:close(Socket);
 			% loop(Socket, Transport);
@@ -27,28 +27,26 @@ loop(Socket, Transport, Dir) ->
 	end.
 
 protocol(<<"HEAD " , RawData/binary>>, Socket, Transport, Dir) ->
-    io:fwrite("~n***********GOT HEAD~n", []),
+    % io:fwrite("~n***********GOT HEAD~n", []),
     send_file_header(RawData, Socket, Transport, Dir);
 protocol(<<"GET " , RawData/binary>>, Socket, Transport, Dir) ->
-    io:fwrite("~n***********GOT GET~n", []),
+    % io:fwrite("~n***********GOT GET~n", []),
     File = send_file_header(RawData, Socket, Transport, Dir),
     file:sendfile(File, Socket);
 protocol(<<_ , _/binary>>, Socket, Transport, _) ->
-    io:fwrite("~n*********** IGNORE~n", []),
+    % io:fwrite("~n*********** IGNORE~n", []),
     Transport:send(Socket, header_compile()).
 
 send_file_header(RawData, Socket, Transport, Dir) ->
     [Doc, _] = binary:split(RawData,<<" ">>),
-    % Check for /../
-    io:fwrite(RawData, []),
-    Check = binary:split(Doc,<<"/">>),
-    io:fwrite(handle_hack(Check), []),
+    % Check = binary:split(Doc,<<"/">>),
+    % io:fwrite(handle_hack(Check), []),
     BinDir = unicode:characters_to_binary(Dir),
     % DocNoPers = unicode:characters_to_binary(http_uri:decode(binary_to_list(Doc))),
     [DocNoParam | _] = binary:split(Doc,<<"?">>),
     FileToCheck = <<BinDir/binary, DocNoParam/binary>>,
     File = handle_directory(filename:extension(FileToCheck), FileToCheck),
-    io:fwrite(File, []),
+    % io:fwrite(File, []),
     Transport:send(Socket, header_compile(File)),
     File.
 
@@ -115,13 +113,13 @@ date_for_header() ->
     Month = element(MonthNumber, {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}),
     io_lib:format("~s, ~B ~s ~B ~2..0B:~2..0B:~2..0B GMT", [DayOfWeek, Day, Month, Year, Hours, Minutes, Seconds]).
 
-handle_hack([Check | Rest]) ->
-    case Check of
-        <<"..">> -> <<"hack">>;
-        _ -> handle_hack(Rest)
-    end;
-handle_hack(Check) ->
-    case Check of
-        <<"..">> -> <<"hack">>;
-        _ -> <<"OK">>
-    end.
+% handle_hack([Check | Rest]) ->
+%     case Check of
+%         <<"..">> -> <<"hack">>;
+%         _ -> handle_hack(Rest)
+%     end;
+% handle_hack(Check) ->
+%     case Check of
+%         <<"..">> -> <<"hack">>;
+%         _ -> <<"OK">>
+%     end.

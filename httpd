@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOCUMENT_PATH="./"
-NCPU=1
+NCPU=""
 
 while [[ $# -gt 1 ]]
 do
@@ -13,7 +13,7 @@ do
             shift
             ;;
         -c)
-            NCPU="$2"
+            NCPU=" +S $2"
             shift
             ;;
         *)
@@ -58,6 +58,6 @@ abspath() {
 
 echo $(abspath $DOCUMENT_PATH)
 
-"$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/_rel/highloadserver/bin/highloadserver console -r "$(abspath $DOCUMENT_PATH)"
+"$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/_rel/highloadserver/bin/highloadserver console -r "$(abspath $DOCUMENT_PATH)" $NCPU
 
 #HTTPD_DOCUMENT_PATH="$(abspath $DOCUMENT_PATH)" HTTPD_CPU=$NCPU make run

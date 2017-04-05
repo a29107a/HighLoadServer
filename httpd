@@ -26,7 +26,8 @@ done
 abspath() {
 	local thePath
 	if [[ ! "$1" =~ ^/ ]];then
-		thePath="$PWD/$1"
+#		thePath="$PWD/$1"
+        thePath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/$1"
 	else
 		thePath="$1"
 	fi
@@ -57,6 +58,6 @@ abspath() {
 
 echo $(abspath $DOCUMENT_PATH)
 
-./_rel/highloadserver/bin/highloadserver console -r "$(abspath $DOCUMENT_PATH)"
+"$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/_rel/highloadserver/bin/highloadserver console -r "$(abspath $DOCUMENT_PATH)"
 
 #HTTPD_DOCUMENT_PATH="$(abspath $DOCUMENT_PATH)" HTTPD_CPU=$NCPU make run
